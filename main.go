@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/streadway/amqp"
 )
 
-func main()  {
+func main() {
 	fmt.Println("Go with RabbitMQ")
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/");
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 
 	if err != nil {
 		fmt.Println(err)
@@ -26,7 +27,7 @@ func main()  {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"TestQueue", 
+		"TestQueue",
 		false,
 		false,
 		false,
@@ -40,15 +41,15 @@ func main()  {
 	}
 
 	fmt.Println(q)
-	
+
 	err = ch.Publish(
 		"",
 		"TestQueue",
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body: []byte("Hello World"),
+			ContentType: "application/json",//"text/plain",
+			Body:        []byte("{\"mac\":\"123\",\"message\":\"hello\"}"),//[]byte("Message send to a rabbitmq queue and received by other service"),
 		},
 	)
 	if err != nil {

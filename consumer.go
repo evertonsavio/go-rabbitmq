@@ -1,10 +1,19 @@
 package main
 
-
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/streadway/amqp"
 )
+
+
+type MessageBody struct {
+	Mac     string `json mac`
+	Message string `json message`
+}
 
 func main(){
 	fmt.Println("Consumer Application")
@@ -37,6 +46,23 @@ func main(){
 	go func(){
 		for d := range msgs {
 			fmt.Printf("Received msg: %s\n", d.Body)
+
+			var msgBody MessageBody
+			json.Unmarshal(d.Body, &msgBody)
+
+			//log.Println(msgBody.Mac)
+			//log.Println(msgBody.Message)
+
+			//WRITING TO FILE
+			f, err := os.OpenFile(msgBody.Mac, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+			if err != nil {
+				log.Fatalf("error opening file: %v", err)
+			}
+			f.WriteString(string(d.Body) + "\n")
+
+			defer f.Close()
+		
+			log.SetOutput(f)
 		}
 	}()
 
