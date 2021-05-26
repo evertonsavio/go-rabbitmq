@@ -57,7 +57,7 @@ func main(){
 			fmt.Println(msgBody.Mac)
 
 			//WRITING TO FILE
-			f, err := os.OpenFile(msgBody.Mac, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+			f, err := os.OpenFile("./logs/" + msgBody.Mac, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 			if err != nil {
 				log.Fatalf("error opening file: %v", err)
 			}

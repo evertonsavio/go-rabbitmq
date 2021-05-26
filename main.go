@@ -49,7 +49,7 @@ func main() {
 		false,
 		amqp.Publishing{
 			ContentType: "application/json",//"text/plain",
-			Body:        []byte("{\"mac\":\"1:2:3\",\"message\":\"hello\"}"),//[]byte("Message send to a rabbitmq queue and received by other service"),
+			Body:        []byte("{\"mac\":\"11:22:33:44:55:66\",\"message\":\"hello\"}"),//[]byte("Message send to a rabbitmq queue and received by other service"),
 		},
 	)
 	if err != nil {
