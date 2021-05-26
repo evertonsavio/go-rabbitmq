@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/streadway/amqp"
 )
@@ -52,6 +53,8 @@ func main(){
 
 			//log.Println(msgBody.Mac)
 			//log.Println(msgBody.Message)
+			msgBody.Mac = strings.ReplaceAll(msgBody.Mac, ":", "") 
+			fmt.Println(msgBody.Mac)
 
 			//WRITING TO FILE
 			f, err := os.OpenFile(msgBody.Mac, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
