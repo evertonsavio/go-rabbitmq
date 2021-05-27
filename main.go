@@ -27,7 +27,7 @@ func main() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"TestQueue",
+		"log.firmware.queue",
 		false,
 		false,
 		false,
@@ -44,12 +44,12 @@ func main() {
 
 	err = ch.Publish(
 		"",
-		"TestQueue",
+		"log.firmware.queue",
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "application/json",//"text/plain",
-			Body:        []byte("{\"mac\":\"11:22:33:44:55:66\",\"message\":\"hello\"}"),//[]byte("Message send to a rabbitmq queue and received by other service"),
+			ContentType: "application/json",                                                                      //"text/plain",
+			Body:        []byte("{\"mac\":\"11:22:33:44:55:66\",\"log\":\"this is my log sent by iot device\"}"), //[]byte("Message send to a rabbitmq queue and received by other service"),
 		},
 	)
 	if err != nil {

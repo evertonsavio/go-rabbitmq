@@ -10,31 +10,36 @@ import (
 	"github.com/streadway/amqp"
 )
 
-
 type MessageBody struct {
-	Mac     string `json mac`
-	Message string `json message`
+	Mac string `json mac`
+	Log string `json log`
 }
 
-func main(){
-	fmt.Println("Consumer Application")
+func main() {
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	RABBIT_HOST := os.Getenv("RABBIT_HOST")
+	fmt.Println("Rabbit host is: " + RABBIT_HOST)
+
+	//RABBIT CONNECTION/////////////////////////////////////////////////
+	conn, err := amqp.Dial("amqp://guest:guest@" + RABBIT_HOST + ":5672/")
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 	defer conn.Close()
+	fmt.Println("Successfully connected to RabbitMQ")
 
-	ch, err := conn.Channel()
+	//RABBIT CHANNEL//////////////
+	channel, err := conn.Channel()
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	defer ch.Close()
+	defer channel.Close()
 
-	msgs, err := ch.Consume(
-		"TestQueue",
+	//CONSUMING QUEUE//////////////////
+	msgs, err := channel.Consume(
+		"log.firmware.queue",
 		"",
 		true,
 		false,
@@ -42,60 +47,45 @@ func main(){
 		false,
 		nil,
 	)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
 
+	//GO CHANNEL TO RUN FOREVER
 	forever := make(chan bool)
-	go func(){
+
+	//GO ROUTINE -> LETS GO!!!
+	go func() {
 		for d := range msgs {
 			fmt.Printf("Received msg: %s\n", d.Body)
 
 			var msgBody MessageBody
 			json.Unmarshal(d.Body, &msgBody)
 
-			//log.Println(msgBody.Mac)
-			//log.Println(msgBody.Message)
-			msgBody.Mac = strings.ReplaceAll(msgBody.Mac, ":", "") 
-			fmt.Println(msgBody.Mac)
+			msgBody.Mac = strings.ReplaceAll(msgBody.Mac, ":", "")
 
-			//WRITING TO FILE
-			f, err := os.OpenFile("./logs/" + msgBody.Mac + ".log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+			//CREATE DIR IF IF IT DOES NOT EXISTS///////////////
+			if _, err := os.Stat("./logs"); os.IsNotExist(err) {
+				os.Mkdir("./logs", 0700)
+			}
+
+			//WRITING TO FILE///////////////////////////////////////////////////////////////////////////
+			f, err := os.OpenFile("./logs/"+msgBody.Mac+".log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 			if err != nil {
 				log.Fatalf("error opening file: %v", err)
 			}
-			f.WriteString(string(d.Body) + "\n")
+			f.WriteString(msgBody.Log + "\n")
 
 			defer f.Close()
-		
+
 			log.SetOutput(f)
 		}
 	}()
 
 	fmt.Println("Successfully connected to our RabbitMQ instance")
 	fmt.Println("[*] - waiting for messages")
-	
+
 	<-forever
 
 }
-
-
-//GO ROUTINE & CHANNELS EXAMPLE
-//=========================================
-// import (
-// 	"fmt"
-// 	"time"
-// )
-
-// func say(s string, done chan string) {
-// 	for i := 0; i < 5; i++ {
-// 		time.Sleep(100 * time.Millisecond)
-// 		fmt.Println(s)
-// 	}
-// 	done <- "Terminei"
-	
-// }
-
-// func main() {
-// 	done := make(chan string)
-// 	go say("world", done)
-// 	fmt.Println(<-done)
-// }
-//=========================================
